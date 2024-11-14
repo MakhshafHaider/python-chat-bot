@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Ensure the body takes up full window height */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f7f7f7;
+        }
+
+        /* Main chat container to fill the screen */
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 600px;
+            height: 90vh; /* Set the height of the chat container to 90% of the viewport */
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* Header styling with the introduction message */
+        h3 {
+            margin: 0;
+            padding: 15px;
+            background-color: #1a4687;
+            color: white;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        #intro-message {
+            padding: 15px;
+            font-size: 16px;
+            color: #333;
+            background-color: #e9ecef;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        /* Chatbox takes available space and is scrollable */
+        #chat-box {
+            flex-grow: 1;
+            padding: 10px;
+            background-color: #f0f2f6;
+            overflow-y: auto;
+            margin-bottom: 0;
+        }
+
+        /* Messages style */
+        .user-message {
+            text-align: right;
+            color: white;
+            background-color: #2da8d9;
+            padding: 8px;
+            margin: 5px;
+            border-radius: 10px;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .model-message {
+            text-align: left;
+            color: black;
+            background-color: #e0e0e0;
+            padding: 8px;
+            margin: 5px;
+            border-radius: 10px;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: none;
+            color: grey;
+            font-style: italic;
+            padding-left: 10px;
+        }
+
+        /* Input area at the bottom */
+        .input-group {
+            padding: 10px;
+            background-color: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            border-radius: 20px;
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            border-radius: 20px;
+            background-color: #1a4687;
+            color: white;
+            padding: 10px;
+            margin-left: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1453a3;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #2da8d9;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h3>AI-Powered Chatbot - Cymerge</h3>
+        <div id="intro-message">
+            Welcome to Cymerge! How can I help you? Tell me about your business. <br> 
+            For Example: I want to integrate payment methods in my e-store. <br>
+            I want to build an e-commerce website. <br>
+            I want to build an android app.
+        </div>
+        <div id="chat-box"></div>
+        <p id="typing-indicator" class="typing-indicator">AI is typing <span class="spinner"></span></p>
+        <div class="input-group">
+            <input type="text" id="user-input" class="form-control" placeholder="Type your message here..." autofocus>
+            <button id="send-btn" class="btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (!userInput.trim()) return;
+
+            // Add user's message to chat
+            appendMessage('user-message', userInput);
+            document.getElementById('user-input').value = '';
+            typingIndicator.style.display = 'block';
+
+            // Make request to AI
+            const response = await fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: userInput })
+            });
+
+            const data = await response.json();
+            typingIndicator.style.display = 'none';
+
+            // Display AI's response
+            appendMessage('model-message', data.response);
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function appendMessage(className, content) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = className;
+            msgDiv.innerText = content;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+        // Enable "Enter" key to send messages
+        document.getElementById('user-input').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
